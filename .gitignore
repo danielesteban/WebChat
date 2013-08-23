@@ -1,0 +1,10 @@
+._*
+.DS_Store
+*~
+\#*\#
+css/screen.css
+js/templates.js
+js/partials.js
+scripts/nginx.pid
+bundle/
+node_modules/

@@ -1,0 +1,63 @@
+@import "reset.less";
+@import "lib.less";
+@import "typo.less";
+@import "components.less";
+
+/* Main Layout */
+header {
+	background: #808080;
+	padding: 0 20px;
+	color: #fff;
+	font-weight: bold;
+	.boxShadow(0 1px 5px rgba(0, 0, 0, 0.1));
+}
+
+menu#buddies {
+	float: right;
+	width: 150px;
+	padding: 10px 20px;
+	border-left: 1px solid #bbb;
+	background: #eaeaea;
+	li {
+		margin: 0 0 10px; 
+	}
+	img.webcam {
+		width: 150px;
+		height: 113px;
+		background: #000;
+	}
+}
+
+form#messageBox {
+	clear: both;
+	textarea {
+		margin: 0;
+	}
+}
+
+section {
+	overflow-y: scroll;
+	padding: 0 20px;
+	div.message {
+		margin: 0 0 5px;
+		&:first-child {
+			padding-top: 10px;
+		}
+		strong {
+			float: left;
+		}
+		p {
+			margin: 0;
+		}
+	}
+}
+
+footer {
+	padding: 10px 20px;
+	text-align: right;
+	color: #808080;
+	a {
+		text-decoration: underline;
+		color: #3b5998;
+	}
+}
