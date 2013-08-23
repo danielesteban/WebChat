@@ -78,7 +78,8 @@ chat.on('connection', function(conn) {
 		}
 	});
 	conn.on('close', function() {
-		clients.splice(arraySearch(clients, conn.id, 'id', true), 1);
+		var index = arraySearch(clients, conn.id, 'id', true);
+		index !== false && clients.splice(index, 1);
 		broadcast({
 			func : 'disconnect',
 			id : conn.id
