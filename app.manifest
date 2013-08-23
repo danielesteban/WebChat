@@ -1,0 +1,19 @@
+CACHE MANIFEST
+
+# 3688fb533ed4c12129ffe2ecca31d045
+
+CACHE:
+/?f5522160761889f6bdc4621214b2a96e
+/e697c78e2077644738459e7477850d95.css
+/bd309b7beb5281cf848af71ed1332b1e.js
+/img/icons-white.png?9bbc6e9602998a385c2ea13df56470fd
+/img/icons.png?2516339970d710819585f90773aebe0a
+
+FALLBACK:
+/ /?f5522160761889f6bdc4621214b2a96e
+/img/icons-white.png /img/icons-white.png?9bbc6e9602998a385c2ea13df56470fd
+/img/icons.png /img/icons.png?2516339970d710819585f90773aebe0a
+
+NETWORK:
+/app.manifest
+*
