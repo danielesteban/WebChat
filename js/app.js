@@ -53,7 +53,18 @@ SOCKJS = {
 				break;
 				case 'frame':
 					if(!clients[e.id]) return;
-					$('menu#buddies li#client' + e.id + ' img.webcam').attr('src', e.frame);
+					if(clients[e.id].frames) return clients[e.id].frames.push(e.frame);
+					clients[e.id].frames = [e.frame];
+					clients[e.id].frameC = 0;
+					var draw = function() {
+							if(!clients[e.id] || !clients[e.id].frames.length) return;
+							clients[e.id].frameC++;
+							if(clients[e.id].frameC < SKIP_FRAMES) return requestAnimationFrame(draw);
+							clients[e.id].frameC = 0;
+							$('menu#buddies li#client' + e.id + ' img.webcam').attr('src', clients[e.id].frames.unshift());
+						};
+
+					requestAnimationFrame(draw);
 				break;
 			}
 			if(e.callback && SOCKJS.callbacks[e.callback]) {
@@ -96,6 +107,12 @@ window.applicationCache && window.applicationCache.addEventListener('updateready
 	window.location.reload();
 }, false);
 
+window.URL = window.URL || window.webkitURL;
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+SKIP_FRAMES = 3; //Num frames before firing the webcam capture/send (must be the same on all clients/broadcasters)
+
 $(window).load(function() {
 	/* Render the skin */
 	$('body').hide().empty().append(Handlebars.templates.skin()).fadeIn('fast');
@@ -122,7 +139,8 @@ $(window).load(function() {
 	var onResize = function() {
 			var sectionHeight = $(window).height() - $('header').height() - $('form#messageBox').height();
 			$('section').css('height', sectionHeight);
-			$('menu').css('height', sectionHeight - 20);
+			$('div#aside').css('height', sectionHeight - 20);
+			$('div#aside menu#buddies').css('height', sectionHeight - 20 - $('div#aside div#user').height() - 21);
 		};
 
 	onResize();
@@ -179,31 +197,38 @@ $(window).load(function() {
         	$('form#messageBox textarea').first().focus();
         
         	/* Init Video */
-			window.URL = window.URL || window.webkitURL;
-			navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 			if(!navigator.getUserMedia) return;
 			var video = $('<video autoplay>')[0],
 				canvas = $('<canvas>')[0],
 				ctx = canvas.getContext('2d'),
-				videoInterval = 0;
+				frameC = 0;
 
 			navigator.getUserMedia({video: true}, function(localMediaStream) {
-				var frameRate = (1000 / 20), //in ms
-					draw = function() {
+				var draw = function() {
+						frameC++;
+						if(frameC < SKIP_FRAMES) return requestAnimationFrame(draw);
+						frameC = 0;
 						canvas.width = 150;
 	         			canvas.height = 113;
 						ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
-						var frame = canvas.toDataURL('image/webp');
+						var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
+							data = pixels.data;
+
+						for(var i=0; i<data.length; i+=4) {
+							var alpha = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+							data[i] = data[i + 1] = data[i + 2] = alpha;
+						}
+						ctx.putImageData(pixels, 0, 0);
+						var frame = canvas.toDataURL('image/jpeg', 0.6);
+						$('div#aside img.webcam').attr('src', frame);
 						SOCKJS.req('frame', {
 							frame : frame
 						});
-						clearTimeout(videoInterval);
-						videoInterval = setTimeout(draw, frameRate);
+						requestAnimationFrame(draw);
 					};
 
 				video.src = window.URL.createObjectURL(localMediaStream);
-				clearTimeout(videoInterval);
-				videoInterval = setTimeout(draw, frameRate);
+				requestAnimationFrame(draw);
 			}, function(e) {
 				console.log(e);
 			});

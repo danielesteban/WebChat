@@ -12,10 +12,13 @@ header {
 	.boxShadow(0 1px 5px rgba(0, 0, 0, 0.1));
 }
 
-menu#buddies {
+div#aside {
 	float: right;
-	width: 150px;
-	padding: 10px 20px;
+	width: 206px;
+}
+
+menu#buddies, div#user {
+	padding: 10px 36px 10px 20px;
 	border-left: 1px solid #bbb;
 	background: #eaeaea;
 	li {
@@ -25,6 +28,19 @@ menu#buddies {
 		width: 150px;
 		height: 113px;
 		background: #000;
+	}
+}
+
+menu#buddies {
+	overflow-y: scroll;
+}
+
+div#user {
+	padding: 10px 20px;
+	border-top: 1px solid #bbb;
+	img.webcam {
+		width: 166px;
+		height: 125px;
 	}
 }
 
