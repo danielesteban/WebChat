@@ -53,7 +53,7 @@ SOCKJS = {
 				break;
 				case 'frame':
 					if(!clients[e.id]) return;
-					if(clients[e.id].frames) return clients[e.id].frames.push(e.frame);
+					if(clients[e.id].frames && clients[e.id].frames.length) return clients[e.id].frames.push(e.frame);
 					clients[e.id].frames = [e.frame];
 					clients[e.id].frameC = 0;
 					var draw = function() {
@@ -61,7 +61,8 @@ SOCKJS = {
 							clients[e.id].frameC++;
 							if(clients[e.id].frameC < SKIP_FRAMES) return requestAnimationFrame(draw);
 							clients[e.id].frameC = 0;
-							$('menu#buddies li#client' + e.id + ' img.webcam').attr('src', clients[e.id].frames.unshift());
+							$('menu#buddies li#client' + e.id + ' img.webcam').attr('src', clients[e.id].frames.shift());
+							requestAnimationFrame(draw);
 						};
 
 					requestAnimationFrame(draw);
@@ -219,8 +220,8 @@ $(window).load(function() {
 							data[i] = data[i + 1] = data[i + 2] = alpha;
 						}
 						ctx.putImageData(pixels, 0, 0);
-						var frame = canvas.toDataURL('image/jpeg', 0.6);
-						$('div#aside img.webcam').attr('src', frame);
+						var frame = canvas.toDataURL('image/webp', 0.6);
+						$('div#aside div#user img.webcam').attr('src', frame);
 						SOCKJS.req('frame', {
 							frame : frame
 						});
