@@ -1,0 +1,13 @@
+{
+	"name" : "webchat",
+	"author" : "Daniel Esteban Nombela <dani@hellacoders.com>",
+	"description": "A tiny node.js server for WebChat",
+	"dependencies" : {
+		"sockjs" : "latest",
+		"rbytes" : "latest",
+		"node-uuid" : "latest"
+	},
+	"scripts" : {
+ 		"start" : "supervisor --extensions 'js' WebChat.js"
+ 	}
+}

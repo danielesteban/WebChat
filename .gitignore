@@ -7,4 +7,4 @@ js/templates.js
 js/partials.js
 scripts/nginx.pid
 bundle/
-node_modules/
+server/node_modules/

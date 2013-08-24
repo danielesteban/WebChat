@@ -4,35 +4,12 @@
 <div id="aside">
 	<menu id="buddies"></menu>
 	<div id="user">
-		<img class="webcam" />
+		<img class="webcam" /><br>
+		<i class="icon-user"></i> <span></span>
 	</div>
 </div>
-<section>
-	<img id="webcam" />
-</section>
+<section></section>
 <form id="messageBox">
 	<textarea class="input-block-level" name="message"></textarea>
 </form>
-<div class="modal-backdrop"></div>
-<div class="modal">
-	<h2>Connect to a server</h2>
-	<form>
-		<div class="control-group">
-			<label>Host:Port</label>
-			<div class="controls">
-				<input type="text" placeholder="Type a host:port" name="server">
-			</div>
-		</div>
-		<div class="control-group">
-			<label>Nick</label>
-			<div class="controls">
-				<input type="text" placeholder="Type a nickname" name="nick">
-			</div>
-		</div>
-		<div class="control-group">
-			<div class="controls">
-				<button class="btn" type="submit">Connect</button>
-			</div>
-		</div>
-	</form>
-</div>
+{{>modal}}
