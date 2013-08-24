@@ -22,7 +22,7 @@ SOCKJS = {
 			SOCKJS.room && (params.room = SOCKJS.room.id);
 			SOCKJS.req('join', params, function(room) {
 				SOCKJS.room = room;
-				window.history.state !== '/' + room.id && window.history.pushState('/' + room.id, '', '/' + room.id);
+				window.location.hash !== '#' + room.id && (window.location.hash = '#' + room.id);
 				$('menu#buddies').empty();
 				for(var id in room.clients) {
 					var li = Handlebars.partials.buddie({
@@ -38,7 +38,7 @@ SOCKJS = {
 				};
 				$('section').empty().append(Handlebars.partials.roomLink({
 					id : room.id,
-					link : 'http://' + window.location.host + '/' + room.id
+					link : 'http://' + window.location.host + '/#' + room.id
 				}));
 			});
 		};
@@ -255,7 +255,7 @@ $(window).load(function() {
 	var backdrop = $('div.modal-backdrop'),
 		modal = $('div.modal'),
 		form = $('form', modal),
-		roomId = document.location.pathname.substr(1);
+		roomId = window.location.hash.substr(1);
 
 	$('input[name="server"]', modal).val(server);
 	nick && $('input[name="nick"]', modal).val(nick);
