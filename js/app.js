@@ -1,8 +1,8 @@
 SOCKJS = {
 	reconnectTimeout : 1,
-	server : 'hellacoders.com:9080',
+	server : 'http://hellacoders.com:9080/chat',
 	connect : function() {
-		var sock = new SockJS('http://' + SOCKJS.server + '/chat');
+		var sock = new SockJS(SOCKJS.server);
 		SOCKJS.sock = sock;
 		sock.onopen = function() {
 			SOCKJS.connected = true;
