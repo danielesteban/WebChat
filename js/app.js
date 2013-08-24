@@ -25,9 +25,10 @@ SOCKJS = {
 				window.history.state !== '/' + room.id && window.history.pushState('/' + room.id, '', '/' + room.id);
 				$('menu#buddies').empty();
 				for(var id in room.clients) {
-					var li = $('<li id="client' + id + '"><img class="webcam" /><br><i class="icon-user"></i> <span></span></li>');
-					$('span', li).text(room.clients[id].nick);
-					$('menu#buddies').append(li);
+					$('menu#buddies').append(Handlebars.partials.buddie({
+						id : id,
+						nick : room.clients[id].nick
+					}));
 				}
 				room.clients[room.client_id] = {
 					nick : SOCKJS.nick
@@ -51,10 +52,11 @@ SOCKJS = {
 					var id = e.id;
 					delete e.id;
 					clients[id] = e;
-					var li = $('<li id="client' + id + '"><img class="webcam" /><br><i class="icon-user"></i> <span></span></li>');
-					$('span', li).text(e.nick);
 					$('menu#buddies li#client' + id).remove();
-					$('menu#buddies').append(li);
+					$('menu#buddies').append(Handlebars.partials.buddie({
+						id : id,
+						nick : e.nick
+					}));
 				break;
 				case 'disconnect':
 					delete clients[e.id];
@@ -188,6 +190,11 @@ navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia 
 SKIP_FRAMES = 3; //Num frames before firing the webcam capture/send (must be the same on all clients/broadcasters)
 
 $(window).load(function() {
+	/* Handlebars helpers */
+	Handlebars.registerHelper('defaultSrc', function(id) {
+		return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==';
+	});
+
 	/* Render the skin */
 	$('body').hide().empty().append(Handlebars.templates.skin()).fadeIn('fast');
 	
@@ -276,7 +283,7 @@ $(window).load(function() {
         
         	/* Init Video */
 			if(!navigator.getUserMedia) return;
-			var video = $('<video autoplay>')[0],
+			var video = $('<video>')[0],
 				canvas = $('<canvas>')[0],
 				ctx = canvas.getContext('2d'),
 				frameC = 0;
@@ -288,7 +295,11 @@ $(window).load(function() {
 						frameC = 0;
 						canvas.width = 150;
 	         			canvas.height = 113;
-						ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
+						try {
+							ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
+						} catch (e) {
+							if(!e.name || e.name !== 'NS_ERROR_NOT_AVAILABLE') return;
+						}
 						var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
 							data = pixels.data;
 
@@ -318,7 +329,7 @@ $(window).load(function() {
 							}
 						}
 						ctx.putImageData(pixels, 0, 0);
-						var frame = canvas.toDataURL('image/webp', 0.6);
+						var frame = canvas.toDataURL('image/jpeg', 0.5);
 						$('div#aside div#user img.webcam').attr('src', frame);
 						SOCKJS.req('frame', {
 							frame : frame
@@ -326,8 +337,13 @@ $(window).load(function() {
 						requestAnimationFrame(draw);
 					};
 
-				video.src = window.URL.createObjectURL(localMediaStream);
-				requestAnimationFrame(draw);
+				if(typeof navigator.mozGetUserMedia === 'function') video.mozSrcObject = localMediaStream;
+				else video.src = window.URL.createObjectURL(localMediaStream);
+				video.play();
+				if(window.chrome) return requestAnimationFrame(draw);
+				video.addEventListener('canplay', function() {
+					requestAnimationFrame(draw);
+				});
 			}, function(e) {
 				console.log(e);
 			});
