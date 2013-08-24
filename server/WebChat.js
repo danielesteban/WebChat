@@ -2,7 +2,11 @@ var http = require('http'),
 	sockjs = require('sockjs'),
 	uuid = require('node-uuid'),
 	server = http.createServer(),
-	chat = sockjs.createServer(),
+	chat = sockjs.createServer({
+		log : function(severity, message) {
+			severity === 'error' && console.log(message);
+		}
+	}),
 	clients = {};
 
 function arraySearch(haystack, needle, index, returnIndex) {
