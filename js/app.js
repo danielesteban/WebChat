@@ -25,10 +25,13 @@ SOCKJS = {
 				window.history.state !== '/' + room.id && window.history.pushState('/' + room.id, '', '/' + room.id);
 				$('menu#buddies').empty();
 				for(var id in room.clients) {
-					$('menu#buddies').append(Handlebars.partials.buddie({
-						id : id,
-						nick : room.clients[id].nick
-					}));
+					var li = Handlebars.partials.buddie({
+							id : id,
+							nick : room.clients[id].nick
+						});
+
+					$('menu#buddies').append(li);
+					li.fadeIn('fast');
 				}
 				room.clients[room.client_id] = {
 					nick : SOCKJS.nick
@@ -48,19 +51,22 @@ SOCKJS = {
 			var clients = SOCKJS.room && SOCKJS.room.clients ? SOCKJS.room.clients : {};
 			switch(e.func) {
 				case 'connect':
+					var id = e.id,
+						li = Handlebars.partials.buddie({
+							id : id,
+							nick : e.nick
+						});
+
 					delete e.func;
-					var id = e.id;
 					delete e.id;
 					clients[id] = e;
 					$('menu#buddies li#client' + id).remove();
-					$('menu#buddies').append(Handlebars.partials.buddie({
-						id : id,
-						nick : e.nick
-					}));
+					$('menu#buddies').append(li);
+					li.fadeIn('fast');
 				break;
 				case 'disconnect':
 					delete clients[e.id];
-					$('menu#buddies li#client' + e.id).fadeOut(function() {
+					$('menu#buddies li#client' + e.id).fadeOut('fast', function() {
 						$(this).remove();
 					});
 				break;
@@ -71,10 +77,18 @@ SOCKJS = {
 				case 'message':
 					if(!clients[e.id]) return;
 					var last = $('section div.message').last(),
-						pad = last.attr('rel') === e.id ? (parseInt(last.css('paddingLeft'), 10) ? last.css('paddingLeft') : $('strong', last).width()) : false,
-						scroll = $('section:animated').length || ($('section').scrollTop() === $('section')[0].scrollHeight - $('section').height());
+						pad = last.attr('rel') === e.id ? (parseInt(last.css('paddingLeft'), 10) ? parseInt(last.css('paddingLeft'), 10) : $('strong', last).width()) : false,
+						scroll = $('section:animated').length || ($('section').scrollTop() === $('section')[0].scrollHeight - $('section').height()),
+						message = {
+							id : e.id,
+							nick : clients[e.id].nick
+						};
 
-					$('section').append('<div rel="' + e.id + '" class="message"' + (pad ? ' style="padding-left: ' + pad + (typeof pad === 'string' ? '' : 'px') + '"' : '') + '>' + (pad ? '' : '<strong>' + clients[e.id].nick + ':&nbsp;</strong>') + '<p>' + e.message.text.replace(/\n/g, '<br>') + '</p></div>');
+					e.message && e.message.text && (message.text = e.message.text);
+					pad && (message.pad = pad);
+					var div = $(Handlebars.partials.message(message));
+					$('p', div).html($('p', div).text().replace(/\n/g, '<br>'));
+					$('section').append(div);
 					scroll && $('section').stop().animate({scrollTop: $('section')[0].scrollHeight - $('section').height()});
 				break;
 				case 'frame':
