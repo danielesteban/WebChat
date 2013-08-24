@@ -149,6 +149,7 @@ VIDEOEFFECTS = {
 	b : [53, 53, 53, 54, 54, 54, 55, 55, 55, 56, 57, 57, 57, 58, 58, 58, 59, 59, 59, 60, 61, 61, 61, 62, 62, 63, 63, 63, 64, 65, 65, 65, 66, 66, 67, 67, 67, 68, 69, 69, 69, 70, 70, 71, 71, 72, 73, 73, 73, 74, 74, 75, 75, 76, 77, 77, 78, 78, 79, 79, 80, 81, 81, 82, 82, 83, 83, 84, 85, 85, 86, 86, 87, 87, 88, 89, 89, 90, 90, 91, 91, 93, 93, 94, 94, 95, 95, 96, 97, 98, 98, 99, 99, 100, 101, 102, 102, 103, 104, 105, 105, 106, 106, 107, 108, 109, 109, 110, 111, 111, 112, 113, 114, 114, 115, 116, 117, 117, 118, 119, 119, 121, 121, 122, 122, 123, 124, 125, 126, 126, 127, 128, 129, 129, 130, 131, 132, 132, 133, 134, 134, 135, 136, 137, 137, 138, 139, 140, 140, 141, 142, 142, 143, 144, 145, 145, 146, 146, 148, 148, 149, 149, 150, 151, 152, 152, 153, 153, 154, 155, 156, 156, 157, 157, 158, 159, 160, 160, 161, 161, 162, 162, 163, 164, 164, 165, 165, 166, 166, 167, 168, 168, 169, 169, 170, 170, 171, 172, 172, 173, 173, 174, 174, 175, 176, 176, 177, 177, 177, 178, 178, 179, 180, 180, 181, 181, 181, 182, 182, 183, 184, 184, 184, 185, 185, 186, 186, 186, 187, 188, 188, 188, 189, 189, 189, 190, 190, 191, 191, 192, 192, 193, 193, 193, 194, 194, 194, 195, 196, 196, 196, 197, 197, 197, 198, 199],
 	grayscale : false,
 	sepia : false,
+	threshold : 0,
 	noise : 0,
 	init : function(onResize) {
 		$('div#aside div#user a.videoeffects').click(function() {
@@ -160,6 +161,7 @@ VIDEOEFFECTS = {
 		if(window.localStorage) {
 			localStorage.getItem('grayscale') !== null && (VIDEOEFFECTS.grayscale = true);
 			localStorage.getItem('sepia') !== null && (VIDEOEFFECTS.sepia = true);
+			localStorage.getItem('threshold') !== null && (VIDEOEFFECTS.threshold = localStorage.getItem('threshold'));
 			localStorage.getItem('noise') !== null && (VIDEOEFFECTS.noise = localStorage.getItem('noise'));
 		}
 
@@ -172,19 +174,24 @@ VIDEOEFFECTS = {
 					if(this.checked) localStorage.setItem(id, true);
 					else localStorage.removeItem(id);
 				};
+			},
+			slideF = function(id) {
+				return function() {
+					VIDEOEFFECTS[id] = parseInt($(this).val(), 10);
+					if(!window.localStorage) return;
+					if(VIDEOEFFECTS[id] !== 0) localStorage.setItem(id, VIDEOEFFECTS[id]);
+					else localStorage.removeItem(id);
+				};
 			};
 
 		form.grayscale.checked = VIDEOEFFECTS.grayscale;
 		form.sepia.checked = VIDEOEFFECTS.sepia;
+		form.threshold.value = VIDEOEFFECTS.threshold;
 		form.noise.value = VIDEOEFFECTS.noise;
 		$(form.grayscale).click(checkF('grayscale'));
 		$(form.sepia).click(checkF('sepia'));
-		$(form.noise).change(function() {
-			VIDEOEFFECTS.noise = parseInt($(this).val(), 10);
-			if(!window.localStorage) return;
-			if(VIDEOEFFECTS.noise !== 0) localStorage.setItem('noise', VIDEOEFFECTS.noise);
-			else localStorage.removeItem('noise');
-		});
+		$(form.threshold).change(slideF('threshold'));
+		$(form.noise).change(slideF('noise'));
 	}
 };
 
@@ -319,8 +326,16 @@ $(window).load(function() {
 						/* GrayScale */
 						if(VIDEOEFFECTS.grayscale) {
 							for(var i=0; i<data.length; i+=4) {
-								var alpha = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+								var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
 								data[i] = data[i + 1] = data[i + 2] = alpha;
+							}
+						}
+						/* Threshold */
+						if(VIDEOEFFECTS.threshold) {
+							for(var i=0; i<data.length; i+=4) {
+								var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
+								if(VIDEOEFFECTS.grayscale) data[i + 3] = alpha >= VIDEOEFFECTS.threshold ? 255 : 0;
+								else data[i] = data[i + 1] = data[i + 2] = alpha >= VIDEOEFFECTS.threshold ? 255 : 0;
 							}
 						}
 						/* Sepia */

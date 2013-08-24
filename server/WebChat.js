@@ -1,7 +1,15 @@
-var http = require('http'),
+if(process.env.SSL) {
+	var fs = require('fs'),
+		ssl_options = {
+			key : fs.readFileSync('ssl.key'),
+			cert : fs.readFileSync('ssl.crt')
+		};
+}
+
+var http = require('http' + (process.env.SSL ? 's' : '')),
 	sockjs = require('sockjs'),
 	uuid = require('node-uuid'),
-	server = http.createServer(),
+	server = http.createServer(process.env.SSL ? ssl_options : null),
 	chat = sockjs.createServer({
 		log : function(severity, message) {
 			severity === 'error' && console.log(message);
@@ -114,4 +122,4 @@ chat.on('connection', function(conn) {
 
 chat.installHandlers(server, {prefix: '/chat'});
 
-server.listen(9080, '0.0.0.0');
+server.listen(process.env.SSL ? 9090 : 9080, '0.0.0.0');
