@@ -25,10 +25,10 @@ SOCKJS = {
 				window.location.hash !== '#' + room.id && (window.location.hash = '#' + room.id);
 				$('menu#buddies').empty();
 				for(var id in room.clients) {
-					var li = Handlebars.partials.buddie({
+					var li = $(Handlebars.partials.buddie({
 							id : id,
 							nick : room.clients[id].nick
-						});
+						}));
 
 					$('menu#buddies').append(li);
 					li.fadeIn('fast');
@@ -52,10 +52,10 @@ SOCKJS = {
 			switch(e.func) {
 				case 'connect':
 					var id = e.id,
-						li = Handlebars.partials.buddie({
+						li = $(Handlebars.partials.buddie({
 							id : id,
 							nick : e.nick
-						});
+						}));
 
 					delete e.func;
 					delete e.id;
