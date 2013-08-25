@@ -9,11 +9,15 @@
 			<i class="icon-cog"></i>
 		</a>
 		<i class="icon-user"></i> <span></span>
-		<form id="videoeffects">
+		<form id="videoeffects" onsubmit="return false">
 			<label class="checkbox"><input type="checkbox" name="grayscale" /> Grayscale</label>
 			<label class="checkbox"><input type="checkbox" name="sepia" /> Sepia</label>
 			<label class="nm">Threshold:</label> <input type="range" name="threshold" min="0" max="127" />
 			<label class="nm">Noise:</label> <input type="range" name="noise" min="0" max="255" />
+			<button class="btn processBG input-block-level">Remove BG</button>
+			<input type="file" class="addBgImage" style="display:none" />
+			<button class="btn input-block-level" onclick="$(this).prev().click()">Add BG Image</button>
+			<label class="nm">Chroma Treshold:</label> <input type="range" name="chromaTreshold" min="0" max="127" />
 		</form>
 	</div>
 </div>

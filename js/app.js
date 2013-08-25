@@ -101,7 +101,7 @@ SOCKJS = {
 					clients[e.id].lastFrame = 0;
 					var draw = function(timestamp) {
 							if(!clients[e.id] || !clients[e.id].frames.length) return;
-							if(timestamp - clients[e.id].lastFrame < (1000 / VIDEOEFFECTS.fps)) return requestAnimationFrame(draw);
+							if(timestamp - clients[e.id].lastFrame < (1000 / VIDEO.fps)) return requestAnimationFrame(draw);
 							clients[e.id].lastFrame = timestamp;
 							$('menu#buddies li#client' + e.id + ' img.webcam').attr('src', clients[e.id].frames.shift());
 							requestAnimationFrame(draw);
@@ -141,8 +141,11 @@ SOCKJS = {
 	}
 };
 
-VIDEOEFFECTS = {
+VIDEO = {
 	fps : 20,
+	width : 150,
+	height : 113,
+	video : $('<video>')[0],
 	/* color map for sepia */
 	r : [0, 0, 0, 1, 1, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 12, 12, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 17, 18, 19, 19, 20, 21, 22, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 44, 45, 47, 48, 49, 52, 54, 55, 57, 59, 60, 62, 65, 67, 69, 70, 72, 74, 77, 79, 81, 83, 86, 88, 90, 92, 94, 97, 99, 101, 103, 107, 109, 111, 112, 116, 118, 120, 124, 126, 127, 129, 133, 135, 136, 140, 142, 143, 145, 149, 150, 152, 155, 157, 159, 162, 163, 165, 167, 170, 171, 173, 176, 177, 178, 180, 183, 184, 185, 188, 189, 190, 192, 194, 195, 196, 198, 200, 201, 202, 203, 204, 206, 207, 208, 209, 211, 212, 213, 214, 215, 216, 218, 219, 219, 220, 221, 222, 223, 224, 225, 226, 227, 227, 228, 229, 229, 230, 231, 232, 232, 233, 234, 234, 235, 236, 236, 237, 238, 238, 239, 239, 240, 241, 241, 242, 242, 243, 244, 244, 245, 245, 245, 246, 247, 247, 248, 248, 249, 249, 249, 250, 251, 251, 252, 252, 252, 253, 254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
 	g : [0, 0, 1, 2, 2, 3, 5, 5, 6, 7, 8, 8, 10, 11, 11, 12, 13, 15, 15, 16, 17, 18, 18, 19, 21, 22, 22, 23, 24, 26, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 35, 37, 38, 39, 40, 41, 43, 44, 44, 45, 46, 47, 48, 50, 51, 52, 53, 54, 56, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 79, 80, 81, 83, 84, 85, 86, 88, 89, 90, 92, 93, 94, 95, 96, 97, 100, 101, 102, 103, 105, 106, 107, 108, 109, 111, 113, 114, 115, 117, 118, 119, 120, 122, 123, 124, 126, 127, 128, 129, 131, 132, 133, 135, 136, 137, 138, 140, 141, 142, 144, 145, 146, 148, 149, 150, 151, 153, 154, 155, 157, 158, 159, 160, 162, 163, 164, 166, 167, 168, 169, 171, 172, 173, 174, 175, 176, 177, 178, 179, 181, 182, 183, 184, 186, 186, 187, 188, 189, 190, 192, 193, 194, 195, 195, 196, 197, 199, 200, 201, 202, 202, 203, 204, 205, 206, 207, 208, 208, 209, 210, 211, 212, 213, 214, 214, 215, 216, 217, 218, 219, 219, 220, 221, 222, 223, 223, 224, 225, 226, 226, 227, 228, 228, 229, 230, 231, 232, 232, 232, 233, 234, 235, 235, 236, 236, 237, 238, 238, 239, 239, 240, 240, 241, 242, 242, 242, 243, 244, 245, 245, 246, 246, 247, 247, 248, 249, 249, 249, 250, 251, 251, 252, 252, 252, 253, 254, 255],
@@ -151,6 +154,7 @@ VIDEOEFFECTS = {
 	sepia : false,
 	threshold : 0,
 	noise : 0,
+	chromaTreshold : 50,
 	init : function(onResize) {
 		$('div#aside div#user a.videoeffects').click(function() {
 			$('div#aside div#user form#videoeffects').toggle();
@@ -159,17 +163,18 @@ VIDEOEFFECTS = {
 
 		/* Get saved data */
 		if(window.localStorage) {
-			localStorage.getItem('grayscale') !== null && (VIDEOEFFECTS.grayscale = true);
-			localStorage.getItem('sepia') !== null && (VIDEOEFFECTS.sepia = true);
-			localStorage.getItem('threshold') !== null && (VIDEOEFFECTS.threshold = localStorage.getItem('threshold'));
-			localStorage.getItem('noise') !== null && (VIDEOEFFECTS.noise = localStorage.getItem('noise'));
+			localStorage.getItem('grayscale') !== null && (VIDEO.grayscale = true);
+			localStorage.getItem('sepia') !== null && (VIDEO.sepia = true);
+			localStorage.getItem('threshold') !== null && (VIDEO.threshold = localStorage.getItem('threshold'));
+			localStorage.getItem('chromaTreshold') !== null && (VIDEO.chromaTreshold = localStorage.getItem('chromaTreshold'));
+			localStorage.getItem('noise') !== null && (VIDEO.noise = localStorage.getItem('noise'));
 		}
 
 		/* Init UI */
 		var form = $('div#aside div#user form#videoeffects')[0],
 			checkF = function(id) {
 				return function() {
-					VIDEOEFFECTS[id] = this.checked;
+					VIDEO[id] = this.checked;
 					if(!window.localStorage) return;
 					if(this.checked) localStorage.setItem(id, true);
 					else localStorage.removeItem(id);
@@ -177,21 +182,185 @@ VIDEOEFFECTS = {
 			},
 			slideF = function(id) {
 				return function() {
-					VIDEOEFFECTS[id] = parseInt($(this).val(), 10);
+					VIDEO[id] = parseInt($(this).val(), 10);
 					if(!window.localStorage) return;
-					if(VIDEOEFFECTS[id] !== 0) localStorage.setItem(id, VIDEOEFFECTS[id]);
+					if(VIDEO[id] !== 0) localStorage.setItem(id, VIDEO[id]);
 					else localStorage.removeItem(id);
 				};
 			};
 
-		form.grayscale.checked = VIDEOEFFECTS.grayscale;
-		form.sepia.checked = VIDEOEFFECTS.sepia;
-		form.threshold.value = VIDEOEFFECTS.threshold;
-		form.noise.value = VIDEOEFFECTS.noise;
+		form.grayscale.checked = VIDEO.grayscale;
+		form.sepia.checked = VIDEO.sepia;
+		form.threshold.value = VIDEO.threshold;
+		form.noise.value = VIDEO.noise;
+		form.chromaTreshold.value = VIDEO.chromaTreshold;
 		$(form.grayscale).click(checkF('grayscale'));
 		$(form.sepia).click(checkF('sepia'));
 		$(form.threshold).change(slideF('threshold'));
+		$(form.chromaTreshold).change(slideF('chromaTreshold'));
 		$(form.noise).change(slideF('noise'));
+		$('button.processBG', form).click(VIDEO.processBG);
+		$('input.addBgImage', form).change(VIDEO.addBgImage);
+
+		/* Init Video */
+		if(!navigator.getUserMedia) return;
+		var video = VIDEO.video,
+			canvas = $('<canvas>')[0],
+			ctx = canvas.getContext('2d'),
+			lastFrame = 0;
+
+		navigator.getUserMedia({video: true}, function(localMediaStream) {
+			var draw = function(timestamp) {
+					if(timestamp - lastFrame < (1000 / VIDEO.fps)) return requestAnimationFrame(draw);
+					lastFrame = timestamp;
+					canvas.width = VIDEO.width;
+         			canvas.height = VIDEO.height;
+					try {
+						ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
+					} catch (e) {
+						if(!e.name || e.name !== 'NS_ERROR_NOT_AVAILABLE') return;
+					}
+					var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
+						data = pixels.data;
+
+					/* ChromaKey */
+					if(VIDEO.chroma && VIDEO.chromaTreshold > 0) {
+						var avg = VIDEO.chroma,
+							threshold = VIDEO.chromaTreshold,
+							bg = VIDEO.background;
+
+						for(var i=0; i<data.length; i+=4) {
+							if(Math.abs(avg[i] - data[i]) > threshold || Math.abs(avg[i + 1] - data[i + 1]) > threshold || Math.abs(avg[i + 2] - data[i + 2]) > threshold) continue;
+							if(bg) {
+								data[i] = bg[i];
+								data[i + 1] = bg[i + 1];
+								data[i + 2] = bg[i + 2];
+								data[i + 3] = bg[i + 3];
+							} else data[i + 3] = 0;			
+						}
+					}
+					/* GrayScale */
+					if(VIDEO.grayscale) {
+						for(var i=0; i<data.length; i+=4) {
+							var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
+							data[i] = data[i + 1] = data[i + 2] = alpha;
+						}
+					}
+					/* Threshold */
+					if(VIDEO.threshold) {
+						for(var i=0; i<data.length; i+=4) {
+							var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
+							if(VIDEO.grayscale) data[i + 3] = alpha >= VIDEO.threshold ? 255 : 0;
+							else data[i] = data[i + 1] = data[i + 2] = alpha >= VIDEO.threshold ? 255 : 0;
+						}
+					}
+					/* Sepia */
+					if(VIDEO.sepia) {
+						for(var i=0; i<data.length; i+=4) {
+							data[i] = VIDEO.r[data[i]];
+							data[i+1] = VIDEO.g[data[i+1]];
+							data[i+2] = VIDEO.b[data[i+2]];
+						}
+					}
+					/* Noise */
+					if(VIDEO.noise && VIDEO.noise > 0) {
+						for(var i=0; i<data.length; i+=4) {
+							var noise = Math.round(VIDEO.noise - Math.random() * VIDEO.noise);
+							for(var j=0; j<3; j++) {
+								var iPN = noise + data[i+j];
+								data[i+j] = (iPN > 255) ? 255 : iPN;
+							}
+						}
+					}
+					ctx.putImageData(pixels, 0, 0);
+					var frame = canvas.toDataURL('image/jpeg', 0.5);
+					$('div#aside div#user img.webcam').attr('src', frame);
+					!VIDEO.processingBG && SOCKJS.req('frame', {
+						frame : frame
+					});
+					requestAnimationFrame(draw);
+				};
+
+			if(typeof navigator.mozGetUserMedia === 'function') video.mozSrcObject = localMediaStream;
+			else video.src = window.URL.createObjectURL(localMediaStream);
+			video.play();
+			if(window.chrome) return requestAnimationFrame(draw);
+			video.addEventListener('canplay', function() {
+				requestAnimationFrame(draw);
+			});
+		}, function(e) {
+			console.log(e);
+		});
+	},
+	processBG : function() {
+		if(VIDEO.processingBG) return;
+		VIDEO.processingBG = true;
+
+		var video = VIDEO.video,
+			canvas = $('<canvas>')[0],
+			ctx = canvas.getContext('2d'),
+			numSamples = 10,
+			sampleTime = 6000,
+			sampleStart,
+			avgData = [],
+			avgSum = [],
+			avgSample = 0,
+			avg = [];
+
+		var process = function(timestamp) {
+				!sampleStart && (sampleStart = timestamp);
+				if(timestamp - sampleStart > sampleTime) return done();
+				canvas.width = VIDEO.width;
+         		canvas.height = VIDEO.height;
+				try {
+					ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
+				} catch (e) {
+					if(!e.name || e.name !== 'NS_ERROR_NOT_AVAILABLE') return;
+				}
+				var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
+					data = pixels.data;
+
+				for(var x=0; x<data.length; x++) {
+					if(x > 0 && x%4 === 3) continue;
+					!avgData[x] && (avgData[x] = []);
+					!avgSum[x] && (avgSum[x] = 0);
+					avgData[x][avgSample] && (avgSum[x] -= avgData[x][avgSample]);
+					avgData[x][avgSample] = data[x];
+					avgSum[x] += avgData[x][avgSample];
+					avg[x] = Math.round(avgSum[x] / numSamples);
+				}
+
+				avgSample++;
+				avgSample >= numSamples && (avgSample = 0);
+				requestAnimationFrame(process);
+			},
+			done = function() {
+				VIDEO.chroma = avg;
+				VIDEO.processingBG = false;
+			};
+
+		requestAnimationFrame(process);
+	},
+	addBgImage : function(e) {
+		e.stopPropagation();
+		e.preventDefault();
+        if((e.target.files && !e.target.files[0]) && !e.dataTransfer.files[0]) return;
+        var r = new FileReader();
+        r.onload = function(e) {
+            var img = $('<img/>')[0];
+            img.onload = function(e) {
+				var canvas = $('<canvas>')[0],
+					ctx = canvas.getContext('2d');
+            	
+            	canvas.width = VIDEO.width;
+     			canvas.height = VIDEO.height;
+            	ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
+            	VIDEO.background = ctx.getImageData(0, 0, canvas.width, canvas.height).data;	
+            	!VIDEO.chroma && VIDEO.processBG();
+            };
+        	img.src = e.target.result;
+        };
+        r.readAsDataURL(e.target.files ? e.target.files[0] : e.dataTransfer.files[0]);
 	}
 };
 
@@ -249,7 +418,8 @@ $(window).load(function() {
 	onResize();
 	$(window).resize(onResize);
 
-	VIDEOEFFECTS.init(onResize);
+	/* Init video */
+	VIDEO.init(onResize);
 
 	/* Get saved data */
 	var server = SOCKJS.server, nick;
@@ -301,80 +471,6 @@ $(window).load(function() {
         }, 'fast', function() {
         	$(this).remove();
         	$('form#messageBox textarea').first().focus();
-        
-        	/* Init Video */
-			if(!navigator.getUserMedia) return;
-			var video = $('<video>')[0],
-				canvas = $('<canvas>')[0],
-				ctx = canvas.getContext('2d'),
-				lastFrame = 0;
-
-			navigator.getUserMedia({video: true}, function(localMediaStream) {
-				var draw = function(timestamp) {
-						if(timestamp - lastFrame < (1000 / VIDEOEFFECTS.fps)) return requestAnimationFrame(draw);
-						lastFrame = timestamp;
-						canvas.width = 150;
-	         			canvas.height = 113;
-						try {
-							ctx.drawImage(video, 0, 0, 640, 480, 0, 0, canvas.width, canvas.height);
-						} catch (e) {
-							if(!e.name || e.name !== 'NS_ERROR_NOT_AVAILABLE') return;
-						}
-						var pixels = ctx.getImageData(0, 0, canvas.width, canvas.height),
-							data = pixels.data;
-
-						/* GrayScale */
-						if(VIDEOEFFECTS.grayscale) {
-							for(var i=0; i<data.length; i+=4) {
-								var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
-								data[i] = data[i + 1] = data[i + 2] = alpha;
-							}
-						}
-						/* Threshold */
-						if(VIDEOEFFECTS.threshold) {
-							for(var i=0; i<data.length; i+=4) {
-								var alpha = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
-								if(VIDEOEFFECTS.grayscale) data[i + 3] = alpha >= VIDEOEFFECTS.threshold ? 255 : 0;
-								else data[i] = data[i + 1] = data[i + 2] = alpha >= VIDEOEFFECTS.threshold ? 255 : 0;
-							}
-						}
-						/* Sepia */
-						if(VIDEOEFFECTS.sepia) {
-							for(var i=0; i<data.length; i+=4) {
-								data[i] = VIDEOEFFECTS.r[data[i]];
-								data[i+1] = VIDEOEFFECTS.g[data[i+1]];
-								data[i+2] = VIDEOEFFECTS.b[data[i+2]];
-							}
-						}
-						/* Noise */
-						if(VIDEOEFFECTS.noise && VIDEOEFFECTS.noise > 0) {
-							for(var i=0; i<data.length; i+=4) {
-								var noise = Math.round(VIDEOEFFECTS.noise - Math.random() * VIDEOEFFECTS.noise);
-								for(var j=0; j<3; j++) {
-									var iPN = noise + data[i+j];
-									data[i+j] = (iPN > 255) ? 255 : iPN;
-								}
-							}
-						}
-						ctx.putImageData(pixels, 0, 0);
-						var frame = canvas.toDataURL('image/jpeg', 0.5);
-						$('div#aside div#user img.webcam').attr('src', frame);
-						SOCKJS.req('frame', {
-							frame : frame
-						});
-						requestAnimationFrame(draw);
-					};
-
-				if(typeof navigator.mozGetUserMedia === 'function') video.mozSrcObject = localMediaStream;
-				else video.src = window.URL.createObjectURL(localMediaStream);
-				video.play();
-				if(window.chrome) return requestAnimationFrame(draw);
-				video.addEventListener('canplay', function() {
-					requestAnimationFrame(draw);
-				});
-			}, function(e) {
-				console.log(e);
-			});
         });
 	});
 	$((!nick ? 'input[name="nick"]' : 'button'), modal).last().focus();
